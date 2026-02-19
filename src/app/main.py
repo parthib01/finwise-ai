@@ -8,6 +8,7 @@ from app.api.health import router as health_router
 from app.infra.database import db
 from app.api.auth import router as auth_router
 from app.api.users import router as user_router
+from app.api.conversations import router as conversations_router
 
 
 DATABASE_URL = "postgresql://postgres:Parthib%4001@localhost:5432/finwise_ai"
@@ -32,6 +33,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router, prefix="/health")
     app.include_router(auth_router, prefix="/auth")
     app.include_router(user_router, prefix="/users")
+    app.include_router(conversations_router)
 
     return app
 
