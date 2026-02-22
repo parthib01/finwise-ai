@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from app.deps.auth import get_current_user
 from app.services.conversations import create_conversation
 
-router = APIRouter(prefix="/conversations", tags=["conversations"])
+router = APIRouter()
 
 
 @router.post("/")
