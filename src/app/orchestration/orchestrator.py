@@ -6,31 +6,45 @@ from app.nodes.response import generate_response
 from app.nodes.output import validate_output
 from app.nodes.storage import store_message
 from app.nodes.calculation import calculate  
+from app.utils.logger import log_start, log_step, log_end
+
 
 class Orchestrator:
 
     async def run(self, state, memory):
-        # Step 1: Intent 
-        state = classify_intent(state)
 
-        # Step 2: Route 
+        start_time = log_start(state.user_input)
+
+        log_step("Initial State", state.__dict__)
+
+        # 1. Intent
+        state = await classify_intent(state)
+        log_step("Intent Classified", {"intent": state.intent, "params": state.parameters})
+
+        # 2. Route
         flow = route(state)
+        log_step("Route Selected", {"flow": flow})
 
-        # Step 3: Conditional paths
+        # 3. Data Fetch (if needed)
         if flow == "DATA_FLOW":
-            state = validate_permission(state)
             state = await fetch_data(state)
+            log_step("Data Fetched", {"db_result": state.db_result})
 
-        elif flow == "CALCULATION_FLOW":
+        # 4. Calculation
+        if flow == "CALCULATION_FLOW":
             state = calculate(state)
+            log_step("Calculation Done", {"result": state.db_result})
 
-        # Step 4: Generate response 
+        # 5. Response
         state = await generate_response(state, memory)
+        log_step("Response Generated", {"response": state.response})
 
-        # Step 5: Validate output 
-        state = validate_output(state)
-
-        # Step 6: Store message 
+        # 6. Store
         state = await store_message(state)
+        # log_step("Message Stored + Summary Updated")
+        log_step("Message Stored")
+
+        log_end(state.response, start_time)
 
         return state.response
+        
