@@ -8,3 +8,8 @@ build/
 dist/
 
 __pycache__
+
+data
+docs
+bash.exe.stackdump
+*.log
