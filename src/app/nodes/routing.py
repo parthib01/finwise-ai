@@ -5,4 +5,7 @@ def route(state):
     if state.requires_db:
         return "DATA_FLOW"
 
+    if state.intent == "POLICY_QUERY":
+        return "POLICY_RAG_FLOW"
+    
     return "EXPLANATION_FLOW"
