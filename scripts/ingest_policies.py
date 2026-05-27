@@ -1,156 +1,3 @@
-# import os
-# import re
-# from uuid import uuid4
-
-# from langchain_core.documents import Document
-# from langchain_ollama import OllamaEmbeddings
-# from langchain_chroma import Chroma
-
-# from unstructured.partition.pdf import partition_pdf
-
-# # -----------------------------
-# # CONFIG
-# # -----------------------------
-# PERSIST_DIR = os.path.abspath("./data/chroma_policy_db")
-
-# embedding = OllamaEmbeddings(model="mxbai-embed-large")
-
-# vector_store = Chroma(
-#     persist_directory=PERSIST_DIR,
-#     embedding_function=embedding
-# )
-
-# # -----------------------------
-# # TABLE NORMALIZATION
-# # -----------------------------
-# def normalize_table(table_element):
-
-#     text = table_element.text
-
-#     lines = text.split("\n")
-#     structured_lines = []
-
-#     for line in lines:
-#         line = line.strip()
-
-#         if not line:
-#             continue
-
-#         # detect rows with numbers / ranges
-#         if re.search(r"\d", line):
-
-#             # normalize spacing
-#             line = re.sub(r"\s+", " ", line)
-
-#             structured_lines.append(line)
-
-#     if not structured_lines:
-#         return text
-
-#     return "Structured Financial Data:\n" + "\n".join(structured_lines)
-
-#     return structured_text.strip()
-
-
-# # -----------------------------
-# # TEXT CLEANING
-# # -----------------------------
-# def clean_text(text):
-#     return " ".join(text.split())
-
-
-# # -----------------------------
-# # MAIN INGEST FUNCTION
-# # -----------------------------
-# def ingest_pdf(file_path: str, bank: str):
-
-#     print(f"\n📄 Processing: {file_path}")
-
-#     elements = partition_pdf(
-#         filename=file_path,
-#         strategy="hi_res",           
-#         infer_table_structure=True,  
-#         model_name="yolox"          
-#     )
-
-#     docs = []
-
-#     for e in elements:
-
-#         # -----------------------------
-#         # TABLES
-#         # -----------------------------
-#         if e.category == "Table":
-
-#             content = normalize_table(e)
-
-#             docs.append(
-#                 Document(
-#                     page_content=content,
-#                     metadata={
-#                         "id": str(uuid4()),
-#                         "bank": bank,
-#                         "type": "table",
-#                         "source": file_path
-#                     }
-#                 )
-#             )
-
-#         # -----------------------------
-#         # NORMAL TEXT
-#         # -----------------------------
-#         else:
-
-#             text = clean_text(e.text)
-
-#             if len(text) < 50:
-#                 continue
-
-#             docs.append(
-#                 Document(
-#                     page_content=text,
-#                     metadata={
-#                         "id": str(uuid4()),
-#                         "bank": bank,
-#                         "type": "text",
-#                         "source": file_path
-#                     }
-#                 )
-#             )
-
-#     print(f"✅ Created {len(docs)} documents")
-
-#     vector_store.add_documents(docs)
-
-#     print(f"Inserted docs count: {len(docs)}")
-#     all_docs = vector_store.get()
-#     print(f"Total docs in DB: {len(all_docs['documents'])}")
-
-#     for d in docs[:3]:
-#         print(d.metadata)
-
-#     print("✅ Stored in vector DB")
-
-
-# # -----------------------------
-# # RUN INGESTION
-# # -----------------------------
-# if __name__ == "__main__":
-    
-#     ingest_pdf("docs/SBI-Terms-and-Conditions.pdf", bank="SBI")
-
-#     # add more:
-#     # ingest_pdf("docs/hdfc_home_loan.pdf", bank="HDFC")
-
-
-
-
-
-
-
-
-
-
 import os
 import re
 from uuid import uuid4
@@ -307,7 +154,7 @@ def ingest_pdf(file_path: str, bank: str):
         elements,
         max_characters=600,
         new_after_n_chars=400,
-        combine_text_under_n_chars=150,
+        combine_text_under_n_chars=100,
         overlap=50,
     )
 
@@ -315,7 +162,7 @@ def ingest_pdf(file_path: str, bank: str):
 
     docs = []
 
-    for chunk in chunks:
+    for i, chunk in enumerate(chunks):
 
         category = getattr(chunk, "category", "NarrativeText")
         raw_text  = chunk.text.strip()
@@ -359,10 +206,12 @@ def ingest_pdf(file_path: str, bank: str):
                 page_content=content,
                 metadata={
                     "id": str(uuid4()),
+                    "chunk_id": i,
                     "bank": bank,
                     "type": "table",
                     "section": section,      # ✅ stored for filtering/debugging
-                    "source": file_path
+                    "source": file_path,
+                    "doc_type": "home_loan_policy",
                 }
             ))
 
@@ -387,10 +236,12 @@ def ingest_pdf(file_path: str, bank: str):
                 page_content=content,
                 metadata={
                     "id": str(uuid4()),
+                    "chunk_id": i,
                     "bank": bank,
                     "type": "text",
                     "section": section,
-                    "source": file_path
+                    "source": file_path,
+                    "doc_type": "home_loan_policy",
                 }
             ))
 
@@ -411,6 +262,17 @@ def ingest_pdf(file_path: str, bank: str):
         print(f"  Content : {d.page_content[:300]}")
         print("  ---")
 
+    # Deduplication (some chunks may be identical after cleaning, especially tables)
+    seen = set()
+    unique_docs = []
+
+    for d in docs:
+        if d.page_content not in seen:
+            unique_docs.append(d)
+            seen.add(d.page_content)
+
+    docs = unique_docs
+
     vector_store.add_documents(docs)
     print(f"\n✅ Stored in vector DB")
 
@@ -423,6 +285,4 @@ def ingest_pdf(file_path: str, bank: str):
 # -----------------------------
 if __name__ == "__main__":
     ingest_pdf("docs/SBI-Terms-and-Conditions.pdf", bank="SBI")
-
-    # Add more banks when ready:
-    # ingest_pdf("docs/hdfc_home_loan.pdf", bank="HDFC")
+    ingest_pdf("docs/Terms-Conditions-for-HDFC-Bank-Home-Loan.pdf", bank="HDFC")
