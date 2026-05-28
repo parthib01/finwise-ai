@@ -1,27 +1,66 @@
 from app.services.llm_service import classify_intent_llm
 
+
+from app.services.emi_parser_service import extract_emi_parameters
+
+
+
+# ============================================================
+# 🔹 INTENT CLASSIFICATION NODE
+# ============================================================
+
 async def classify_intent(state):
 
-    intent = await classify_intent_llm(state.user_input)
+    # ========================================================
+    # CLASSIFY INTENT
+    # ========================================================
+
+    intent = await classify_intent_llm(
+        state.user_input
+    )
 
     state.intent = intent
 
-    # Set flags
-    if intent == "CATEGORY_SPEND":
-        state.requires_db = True
+    print(
+        f"\n🧠 Classified Intent: {intent}"
+    )
 
-    elif intent == "CALCULATE_EMI":
+    # ========================================================
+    # CALCULATE EMI FLOW
+    # ========================================================
+
+    if intent == "CALCULATE_EMI":
+
         state.requires_db = False
 
-        # TEMP: static params (we improve later)
-        state.parameters = {
-            "principal": 500000,
-            "tenure_months": 24,
-            "bank": "SBI",
-            "loan_type": "home_loan"
-        }
+        print(
+            "\n⚡ Extracting EMI parameters..."
+        )
+
+        params = await extract_emi_parameters(
+            state.user_input
+        )
+
+        state.parameters = params
+
+        print(
+            f"✅ EMI Params: {params}"
+        )
+
+    # ========================================================
+    # POLICY QUERY FLOW
+    # ========================================================
+
+    elif intent == "POLICY_QUERY":
+
+        state.requires_db = False
+
+    # ========================================================
+    # EXPLANATION FLOW
+    # ========================================================
 
     else:
+
         state.requires_db = False
 
     return state
