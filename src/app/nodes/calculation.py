@@ -1,24 +1,55 @@
 from app.services.calculations import calculate_emi
-from app.services.bank_data import BANK_RATES
+
+
 
 def calculate(state):
-    if state.intent == "CALCULATE_EMI":
-        params = state.parameters
 
-        principal = params.get("principal")
-        tenure = params.get("tenure_months")
-        bank = params.get("bank")
-        loan_type = params.get("loan_type")
+    if state.intent != "CALCULATE_EMI":
+        return state
 
-        # Fetch rate
-        rate = BANK_RATES.get(bank, {}).get(loan_type)
+    params = state.parameters
 
-        if rate is None:
-            state.db_result = "Bank or loan type not supported"
-            return state
+    principal = params.get(
+        "principal"
+    )
 
-        emi = calculate_emi(principal, rate, tenure)
+    interest_rate = params.get(
+        "interest_rate"
+    )
 
-        state.db_result = emi
+    tenure_months = params.get(
+        "tenure_months"
+    )
+
+    # ========================================================
+    # VALIDATION
+    # ========================================================
+
+    if (
+        principal is None
+        or interest_rate is None
+        or tenure_months is None
+    ):
+
+        state.db_result = (
+            "Missing EMI parameters"
+        )
+
+        return state
+
+    # ========================================================
+    # EMI CALCULATION
+    # ========================================================
+
+    result = calculate_emi(
+
+        principal=principal,
+
+        annual_interest_rate=interest_rate,
+
+        tenure_months=tenure_months
+    )
+
+    state.db_result = result
 
     return state
