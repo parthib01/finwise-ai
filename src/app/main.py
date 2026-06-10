@@ -10,6 +10,7 @@ from app.api.auth import router as auth_router
 from app.api.users import router as user_router
 from app.api.conversations import router as conversations_router
 from app.api.messages import router as messages_router
+from app.infra.redis_health import check_redis
 
 
 DATABASE_URL = "postgresql://postgres:Parthib%4001@localhost:5432/finwise_ai"
@@ -18,6 +19,7 @@ DATABASE_URL = "postgresql://postgres:Parthib%4001@localhost:5432/finwise_ai"
 async def lifespan(app: FastAPI):
     # startup
     await db.connect(DATABASE_URL)
+    await check_redis()
     yield
     # shutdown      
     await db.disconnect()
