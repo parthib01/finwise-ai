@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 
 from app.deps.auth import get_current_user
 from app.services.messages import add_user_message, get_messages
@@ -17,6 +17,7 @@ router = APIRouter()
 async def post_message(
     conversation_id: str,
     payload: MessageCreate,
+    background_tasks: BackgroundTasks,
     identity: dict = Depends(get_current_user),
 ):
     user_id = identity["user_id"]
@@ -46,7 +47,7 @@ async def post_message(
 
     # Run orchestrator
     orchestrator = Orchestrator()
-    response = await orchestrator.run(state, memory)
+    response = await orchestrator.run(state, memory, background_tasks)
 
     # Return response
     return {

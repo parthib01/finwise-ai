@@ -33,3 +33,19 @@ async def get_messages(conversation_id: str):
         }
         for row in rows
     ]
+
+async def get_message_count(
+    conversation_id: str
+):
+    query = """
+        SELECT COUNT(*) AS count
+        FROM messages
+        WHERE conversation_id = $1
+    """
+
+    row = await db.fetch(
+        query,
+        conversation_id
+    )
+
+    return row[0]["count"]
