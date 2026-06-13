@@ -1,90 +1,112 @@
 # FinWise AI
 
-> Enterprise-grade Financial Intelligence Assistant powered by Hybrid RAG, Redis Caching, and LLM Orchestration
+> Enterprise-grade Financial Intelligence Assistant powered by Hybrid RAG, Redis Caching, and LLM Orchestration.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
-![Redis](https://img.shields.io/badge/Redis-Caching-red)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
+![Redis](https://img.shields.io/badge/Redis-Caching-red)
 ![RAG](https://img.shields.io/badge/RAG-Hybrid-orange)
 ![Version](https://img.shields.io/badge/version-v0.1.0-brightgreen)
 
-FinWise AI is a backend-first financial assistant designed to answer banking policy questions, explain financial concepts, and perform EMI calculations using a modular AI architecture.
+---
 
-The project combines Retrieval-Augmented Generation (RAG), Redis-powered caching, conversation memory, and orchestration patterns commonly used in production AI systems.
+# Overview
+
+FinWise AI is a backend-first financial intelligence assistant that combines Retrieval-Augmented Generation (RAG), Redis caching, conversation memory, and LLM orchestration to answer banking policy questions, explain financial concepts, and perform financial calculations.
+
+The project is designed using production-oriented AI engineering patterns rather than a simple chatbot architecture.
 
 ---
 
-## Features
+# Key Features
 
-### Policy RAG
+## Policy RAG
 
-Ask questions about banking policies and receive grounded answers from source documents.
+Answer banking-policy-related questions using source-grounded retrieval.
 
 Examples:
 
 * What is SBI's LTV ratio?
-* Compare SBI and HDFC home loan eligibility.
+* Compare SBI and HDFC home loan policies.
 * What are the foreclosure charges for HDFC loans?
 
-### Hybrid Retrieval Pipeline
+---
 
-Instead of relying on vector search alone, FinWise uses:
+## Hybrid Retrieval Pipeline
 
-* Vector Similarity Search
+Instead of relying solely on vector search, FinWise uses:
+
+* Semantic Vector Search
 * BM25 Lexical Search
 * Reciprocal Rank Fusion (RRF)
-* Cross-Encoder Reranking
+* Cross Encoder Reranking
 
-This improves retrieval quality for real-world banking documents.
+This improves retrieval accuracy and relevance for banking documents.
 
-### Financial Concept Explanations
+---
+
+## Financial Concept Explanations
 
 Examples:
 
 * What is SIP?
 * What is inflation?
 * What is compounding?
+* What is an ETF?
 * What is a debt fund?
 
-### EMI Calculator
+---
 
-Custom EMI calculations from user-provided inputs.
+## EMI Calculator
+
+Perform EMI calculations directly from user-provided inputs.
 
 Example:
 
-> I want to buy a phone worth ₹60,000 at 17% interest for 12 months.
+> Calculate EMI for ₹60,000 at 17% interest for 12 months.
 
-FinWise calculates:
+Outputs:
 
 * Monthly EMI
 * Total Payment
 * Total Interest Paid
 
-### Conversation Memory
+---
 
-The system maintains conversation context through:
+## Conversation Memory
 
-* Recent Message Memory
-* Long-Term Summary Memory
+FinWise maintains context using:
 
-### Redis Caching
+### Short-Term Memory
 
-#### Summary Cache
+Recent conversation history.
 
-Reduces repeated PostgreSQL reads for conversation summaries.
+### Long-Term Memory
 
-#### Response Cache
-
-Caches generated responses to avoid repeated LLM execution for identical requests.
-
-### Async Background Summarization
-
-Conversation summaries are generated asynchronously after user responses are returned, improving latency and user experience.
+Conversation summaries generated periodically.
 
 ---
 
-## Architecture
+## Redis Caching
+
+### Summary Cache
+
+Reduces PostgreSQL reads by storing conversation summaries in Redis.
+
+### Response Cache
+
+Avoids repeated LLM execution for identical requests.
+
+---
+
+## Async Background Processing
+
+Conversation summaries are generated asynchronously after user responses are returned, improving response latency.
+
+---
+
+# System Architecture
 
 ```text
 User
@@ -103,7 +125,7 @@ Orchestrator
  │     ├── RRF Fusion
  │     └── Cross Encoder Reranker
  │
- ├── EMI Calculation
+ ├── EMI Calculator
  │
  └── Explanation Generation
  │
@@ -114,7 +136,7 @@ Response Generation
 Redis Response Cache
  │
  ▼
-Conversation Storage
+Message Storage
  │
  ▼
 Background Summary Generation
@@ -125,46 +147,41 @@ Redis Summary Cache
 
 ---
 
-## Technology Stack
+# Technology Stack
 
-### Backend
+## Backend
 
 * FastAPI
 * Python 3.11+
 
-### Database
+## Database
 
 * PostgreSQL
 * AsyncPG
 
-### Caching
+## Caching
 
 * Redis
 
-### LLM Layer
+## LLM Layer
 
 * Ollama
 * Llama 3.2
 
-### RAG Stack
+## RAG Stack
 
 * ChromaDB
 * Sentence Transformers
 * BM25
 * Cross Encoder Reranker
 
-### AI Frameworks
+## AI Frameworks
 
 * LangChain
-* LangGraph
-
-### Evaluation
-
-* DeepEval
 
 ---
 
-## Current Project Structure
+# Project Structure
 
 ```text
 src/app
@@ -182,102 +199,136 @@ src/app
 
 ---
 
-## Performance Optimizations
+# Local Setup
 
-### Hybrid Retrieval
+## Prerequisites
 
-Combines semantic and lexical search for improved recall.
+Install the following:
 
-### Reciprocal Rank Fusion
+* Python 3.11+
+* PostgreSQL
+* Docker Desktop
+* Ollama
 
-Merges retrieval results from multiple retrievers.
+Verify:
 
-### Cross Encoder Reranking
-
-Improves precision before answer generation.
-
-### Redis Summary Cache
-
-Avoids unnecessary database reads.
-
-### Redis Response Cache
-
-Avoids repeated LLM execution.
-
-### Async Background Processing
-
-Moves conversation summarization outside the request path.
+```bash
+python --version
+docker --version
+ollama --version
+```
 
 ---
 
-## Example Queries
-
-### Policy Questions
-
-* What is SBI home loan LTV ratio?
-* Compare SBI and HDFC home loan policies.
-* What are the processing charges for HDFC loans?
-
-### Financial Concepts
-
-* What is SIP?
-* What is inflation?
-* What is compounding?
-* What is an ETF?
-
-### EMI Calculations
-
-* Calculate EMI for ₹5 lakh at 11% interest for 5 years.
-* Calculate EMI for a ₹60,000 phone at 17% interest for 12 months.
-
----
-
-## Running Locally
-
-### Clone Repository
+## Clone Repository
 
 ```bash
 git clone https://github.com/parthib01/finwise-ai.git
+
 cd finwise-ai
 ```
 
-### Create Virtual Environment
+---
 
-```bash
-python -m venv .venv
-```
-
-### Activate
+## Create Virtual Environment
 
 Windows:
 
 ```bash
+python -m venv .venv
+
 .venv\Scripts\activate
 ```
 
 Linux / Mac:
 
 ```bash
+python -m venv .venv
+
 source .venv/bin/activate
 ```
 
-### Install Dependencies
+---
+
+## Install Dependencies
 
 ```bash
 pip install -e .
 ```
 
-### Start PostgreSQL
+---
 
-Ensure PostgreSQL is running.
+# PostgreSQL Setup
 
-### Start Redis
+Create database:
+
+```sql
+CREATE DATABASE finwise_ai;
+```
+
+Update database connection settings according to your local PostgreSQL installation.
+
+Current application expects:
+
+```text
+postgresql://postgres:<password>@localhost:5432/finwise_ai
+```
+
+---
+
+# Redis Setup
+
+Pull Redis image:
+
+```bash
+docker pull redis:7
+```
+
+Create Redis container:
+
+```bash
+docker run -d \
+  --name finwise-redis \
+  -p 6379:6379 \
+  redis:7
+```
+
+Verify:
+
+```bash
+docker ps
+```
+
+Expected:
+
+```text
+CONTAINER ID   IMAGE     STATUS
+xxxxxxxx       redis:7   Up ...
+```
+
+Test Redis:
+
+```bash
+docker exec -it finwise-redis redis-cli ping
+```
+
+Expected:
+
+```text
+PONG
+```
+
+For subsequent runs:
 
 ```bash
 docker start finwise-redis
 ```
 
-### Start Ollama
+---
+
+# Ollama Setup
+
+Start Ollama:
 
 ```bash
 ollama serve
@@ -289,15 +340,25 @@ Pull model:
 ollama pull llama3.2:3b
 ```
 
-### Run Application
+Verify:
+
+```bash
+ollama list
+```
+
+---
+
+# Run Application
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
----
+Application:
 
-## API Documentation
+```text
+http://localhost:8000
+```
 
 Swagger UI:
 
@@ -307,9 +368,63 @@ http://localhost:8000/docs
 
 ---
 
-## Roadmap
+# Example Queries
 
-### Completed
+## Policy Questions
+
+* What is SBI home loan LTV ratio?
+* Compare SBI and HDFC home loan policies.
+* What are HDFC foreclosure charges?
+
+## Financial Concepts
+
+* What is SIP?
+* What is inflation?
+* What is compounding?
+* What is ETF?
+
+## EMI Calculations
+
+* Calculate EMI for ₹5 lakh at 11% interest for 5 years.
+* Calculate EMI for ₹60,000 at 17% interest for 12 months.
+
+---
+
+# Performance Optimizations
+
+### Hybrid Retrieval
+
+Combines lexical and semantic search.
+
+### Reciprocal Rank Fusion
+
+Improves recall by combining multiple retrievers.
+
+### Cross Encoder Reranking
+
+Improves final retrieval precision.
+
+### Redis Summary Cache
+
+Reduces database load.
+
+### Redis Response Cache
+
+Reduces LLM latency.
+
+### Async Background Summarization
+
+Improves user-facing response times.
+
+---
+
+# Current Release
+
+```text
+v0.1.0
+```
+
+Features included:
 
 * Authentication & Sessions
 * Conversation Management
@@ -324,34 +439,23 @@ http://localhost:8000/docs
 * Redis Response Cache
 * Async Summary Generation
 
-### In Progress
+---
+
+# Roadmap
+
+## Next Milestones
 
 * Retrieval Cache
 * Dockerization
 * Docker Compose
-
-### Planned
-
 * Kubernetes Deployment
 * CI/CD Pipelines
 * Monitoring & Observability
-* User Document Uploads
-* Advanced Financial Analytics
 
 ---
 
-## Version
+# Author
 
-Current Release:
-
-```text
-v0.1.0
-```
-
----
-
-## Author
-
-Parthib Banerjee
+**Parthib Banerjee**
 
 Software Engineer focused on AI Engineering, Retrieval-Augmented Generation (RAG), LLM Systems, and Enterprise AI Applications.
