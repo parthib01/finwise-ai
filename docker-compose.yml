@@ -1,0 +1,48 @@
+services:
+
+  postgres:
+    image: postgres:16
+
+    container_name: finwise-postgres
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: finwise_ai
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+      - ./scripts/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  redis:
+    image: redis:7
+
+    container_name: finwise-redis
+
+    ports:
+      - "6379:6379"
+
+  api:
+    build: .
+
+    container_name: finwise-api
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - postgres
+      - redis
+
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/finwise_ai
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+volumes:
+  postgres_data:
